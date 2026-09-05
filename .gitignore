@@ -1,0 +1,33 @@
+# Secrets
+.env
+credentials.json
+token.json
+
+# Intermediates (regenerated, never committed)
+.tmp/
+
+# OS / editor
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Node / Vite
+node_modules/
+dist/
+dist-ssr/
+*.local
+*.log
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
