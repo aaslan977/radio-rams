@@ -56,6 +56,13 @@ export function useAudioPlayer() {
           attemptPlay()
         }, RETRY_DELAY_MS)
       } else {
+        // Ретраи исчерпаны — намерение играть снимаем вместе со статусом.
+        // Иначе кнопка показана выключенной (isActive для 'error' — false),
+        // а wantsPlaybackRef остаётся true, и первый клик уходит в ветку
+        // паузы: пользователю пришлось бы жать play дважды.
+        wantsPlaybackRef.current = false
+        retryCountRef.current = 0
+        audio.pause()
         setStatus('error')
       }
     }
@@ -84,6 +91,10 @@ export function useAudioPlayer() {
     if (wantsPlaybackRef.current) {
       audio.load()
       attemptPlay()
+    } else if (usePlayerStore.getState().status === 'error') {
+      // «NO SIGNAL» относился к прежней станции — на новой дисплей должен
+      // снова показывать её название, а не тянуть ошибку за собой.
+      setStatus('stopped')
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [station.streamUrl])

@@ -9,8 +9,16 @@ interface DisplayProps {
   isPlaying: boolean
 }
 
+// Подключение к живому потоку занимает секунды, а обрыв связи внешне ничем не
+// отличается от тишины — поэтому оба переходных состояния подписаны на дисплее
+// вместо названия станции (бриф, раздел 5).
+const STATUS_LABELS: Partial<Record<PlaybackStatus, string>> = {
+  connecting: 'CONNECTING…',
+  error: 'NO SIGNAL',
+}
+
 export function Display({ stationName, status, analyser, isPlaying }: DisplayProps) {
-  const label = status === 'error' ? 'No signal' : stationName
+  const label = STATUS_LABELS[status] ?? stationName
 
   return (
     <div className="flex flex-1 flex-col justify-center gap-2 p-6">
