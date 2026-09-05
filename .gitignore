@@ -1,19 +1,19 @@
 # Secrets
 .env
-credentials.json
-token.json
+.env.local
+.env.*.local
 
-# Intermediates (regenerated, never committed)
-.tmp/
+# Python (venv с fontTools — остался от экспериментов с пиксельными шрифтами)
+.venv/
+__pycache__/
+*.pyc
 
 # OS / editor
 .DS_Store
-
-# Python
-__pycache__/
-*.pyc
-.venv/
-venv/
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.sw?
 
 # Node / Vite
 node_modules/
@@ -21,13 +21,3 @@ dist/
 dist-ssr/
 *.local
 *.log
-
-# Editor
-.vscode/*
-!.vscode/extensions.json
-.idea
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
