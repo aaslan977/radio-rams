@@ -23,12 +23,50 @@ function loadPersisted(): PersistedState {
   }
 }
 
-function persist(state: PersistedState) {
+// Один оборот диска даёт десятки шагов подряд, а setItem синхронный — писать
+// на каждый детент значит десятки блокирующих записей во время жеста. Пачка
+// схлопывается в одну запись: первый вызов заводит таймер, последующие только
+// обновляют то, что будет записано.
+const PERSIST_DELAY_MS = 400
+let persistTimer: ReturnType<typeof setTimeout> | null = null
+let pending: PersistedState | null = null
+
+function writeNow(state: PersistedState) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
   } catch {
     // localStorage недоступен (приватный режим и т.п.) — просто не сохраняем
   }
+}
+
+export function flushPersist() {
+  if (persistTimer) {
+    clearTimeout(persistTimer)
+    persistTimer = null
+  }
+  if (!pending) return
+  const state = pending
+  pending = null
+  writeNow(state)
+}
+
+function persist(state: PersistedState) {
+  pending = state
+  if (persistTimer) return
+  persistTimer = setTimeout(() => {
+    persistTimer = null
+    flushPersist()
+  }, PERSIST_DELAY_MS)
+}
+
+// Без досрочного сброса закрытая сразу после переключения вкладка потеряла бы
+// выбор. pagehide и уход в hidden — единственные события, на которые можно
+// рассчитывать на мобильных: beforeunload там сплошь и рядом не приходит.
+if (typeof window !== 'undefined') {
+  window.addEventListener('pagehide', flushPersist)
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') flushPersist()
+  })
 }
 
 interface PlayerState {
