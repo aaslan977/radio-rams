@@ -3,8 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" sizes="48x48" href="/icons/favicon.ico" />
+    <!-- iOS при «Добавить на экран» не читает манифест и не поддерживает там
+         SVG — без этого тега иконкой приложения становится скриншот страницы. -->
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon-180x180.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#f7f5f2" />
+    <meta name="theme-color" content="#f7f7f7" />
     <meta name="description" content="Веб-радиоприёмник в эстетике Braun с живым эквалайзером" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
