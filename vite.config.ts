@@ -11,6 +11,14 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
+      // Автоинжектируемый registerSW.js только регистрирует воркер и никогда
+      // не проверяет обновления и не перезагружает страницу — уже открытая
+      // вкладка обречена бесконечно работать на старом бандле, пока
+      // пользователь сам не закроет и не откроет её заново (для
+      // установленного на iOS PWA это вообще не очевидное действие).
+      // Регистрацию делаем вручную в main.tsx через virtual:pwa-register,
+      // где reload на обновление настроен явно.
+      injectRegister: false,
       includeAssets: ['favicon.svg', 'icons/favicon.ico', 'icons/apple-touch-icon-180x180.png'],
       manifest: {
         name: 'Radio',
