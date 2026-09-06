@@ -13,6 +13,13 @@
     "moduleDetection": "force",
     "noEmit": true,
 
+    /* strict включён явно: в TS 6 он и так по умолчанию, но конфиг не должен
+       молча зависеть от версии компилятора. noUncheckedIndexedAccess осознанно
+       не включаем — он даёт 14 ошибок, в основном на заведомо безопасной
+       индексации в покадровом цикле отрисовки эквалайзера, где проверки на
+       undefined только зашумили бы горячий код. */
+    "strict": true,
+
     /* Linting */
     "noUnusedLocals": true,
     "noUnusedParameters": true,
