@@ -16,7 +16,7 @@ function App() {
   const stepStation = usePlayerStore((s) => s.stepStation)
 
   const { audioRef, togglePlay } = useAudioPlayer()
-  const { analyserRef, resume } = useAudioAnalyser(audioRef)
+  const { analyser, resume } = useAudioAnalyser(audioRef)
 
   const isPlaying = status === 'playing'
   const isActive = status === 'playing' || status === 'connecting'
@@ -33,7 +33,7 @@ function App() {
         <Display
           stationName={stations[stationIndex].name}
           status={status}
-          analyser={analyserRef.current}
+          analyser={analyser}
           isPlaying={isPlaying}
         />
       </div>

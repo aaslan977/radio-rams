@@ -1,4 +1,4 @@
-import { useEffect, useRef, type RefObject } from 'react'
+import { useEffect, useRef, useState, type RefObject } from 'react'
 
 interface AudioGraph {
   context: AudioContext
@@ -22,7 +22,12 @@ function getAudioGraph(audio: HTMLAudioElement): AudioGraph {
 }
 
 export function useAudioAnalyser(audioRef: RefObject<HTMLAudioElement | null>) {
-  const analyserRef = useRef<AnalyserNode | null>(null)
+  // Анализатор в состоянии, а не в ref: ref, проставленный из эффекта, не
+  // вызывает ре-рендер, поэтому потребитель получал бы null до тех пор, пока
+  // дерево не перерисуется по какой-нибудь посторонней причине. Эквалайзер
+  // оживал только потому, что клик по play попутно менял статус в сторе.
+  const [analyser, setAnalyser] = useState<AnalyserNode | null>(null)
+  // Контекст остаётся в ref: он нужен только обработчику клика, не рендеру.
   const contextRef = useRef<AudioContext | null>(null)
 
   useEffect(() => {
@@ -30,18 +35,39 @@ export function useAudioAnalyser(audioRef: RefObject<HTMLAudioElement | null>) {
     if (!audio) return
 
     const { context, source } = getAudioGraph(audio)
-    const analyser = context.createAnalyser()
-    analyser.fftSize = 256
+    const node = context.createAnalyser()
+    node.fftSize = 256
 
-    source.connect(analyser)
-    analyser.connect(context.destination)
+    source.connect(node)
+    node.connect(context.destination)
 
     contextRef.current = context
-    analyserRef.current = analyser
+    setAnalyser(node)
+
+    // Выход <audio> идёт через граф, поэтому при неработающем контексте
+    // элемент «играет», событие playing приходит, статус становится playing —
+    // а звука нет. Контекст засыпает не только до первого жеста: на iOS его
+    // усыпляет входящий звонок или сворачивание приложения, и сам он больше не
+    // просыпается. Признак «звук сейчас нужен» берём у самого элемента — при
+    // усыплённом контексте он остаётся не на паузе.
+    const resumeIfNeeded = () => {
+      if (audio.paused) return
+      if (context.state === 'running' || context.state === 'closed') return
+      void context.resume()
+    }
+
+    // statechange ловит усыпление в момент, когда вкладка ещё активна;
+    // visibilitychange — возвращение со свёрнутого экрана, где statechange мог
+    // прийти, пока обработчики уже не выполнялись.
+    context.addEventListener('statechange', resumeIfNeeded)
+    document.addEventListener('visibilitychange', resumeIfNeeded)
 
     return () => {
-      source.disconnect(analyser)
-      analyser.disconnect()
+      context.removeEventListener('statechange', resumeIfNeeded)
+      document.removeEventListener('visibilitychange', resumeIfNeeded)
+      source.disconnect(node)
+      node.disconnect()
+      setAnalyser(null)
     }
   }, [audioRef])
 
@@ -49,5 +75,5 @@ export function useAudioAnalyser(audioRef: RefObject<HTMLAudioElement | null>) {
     void contextRef.current?.resume()
   }
 
-  return { analyserRef, resume }
+  return { analyser, resume }
 }
