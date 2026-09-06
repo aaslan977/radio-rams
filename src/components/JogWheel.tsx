@@ -1,13 +1,25 @@
-import { useRef } from 'react'
+import { useRef, type KeyboardEvent } from 'react'
 import { useDrag } from '@use-gesture/react'
 import { useMotionValue, useMotionValueEvent } from 'framer-motion'
 import { useTactileSound } from '../hooks/useTactileSound'
+import { stations } from '../lib/stations'
 
 interface JogWheelProps {
+  activeIndex: number
   onStep: (delta: number) => void
 }
 
 const STEP_DEG = 45
+
+// Диск — <div> с жестами, клавиатура для него сама собой не работает. Без этих
+// клавиш станцию нельзя переключить с клавиатуры вообще: единственный
+// альтернативный орган управления — засечки размером с точку.
+const KEY_STEPS: Record<string, number> = {
+  ArrowRight: 1,
+  ArrowUp: 1,
+  ArrowLeft: -1,
+  ArrowDown: -1,
+}
 
 function normalizeAngleDelta(delta: number): number {
   let d = delta % 360
@@ -16,7 +28,7 @@ function normalizeAngleDelta(delta: number): number {
   return d
 }
 
-export function JogWheel({ onStep }: JogWheelProps) {
+export function JogWheel({ activeIndex, onStep }: JogWheelProps) {
   const { play } = useTactileSound()
   const containerRef = useRef<HTMLDivElement>(null)
   const rotation = useMotionValue(0)
@@ -66,10 +78,30 @@ export function JogWheel({ onStep }: JogWheelProps) {
     if (last) play('release')
   })
 
+  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    const delta = KEY_STEPS[event.key]
+    if (delta === undefined) return
+    // Иначе стрелки прокрутят страницу вместо настройки.
+    event.preventDefault()
+    onStep(delta)
+    play('wheelDetent')
+    // Доворачиваем диск на тот же шаг, что и мышью — чтобы с клавиатуры
+    // управление выглядело так же, а не только меняло станцию.
+    rotation.set(rotation.get() + delta * STEP_DEG)
+  }
+
   return (
     <div
       ref={containerRef}
       {...bind()}
+      role="slider"
+      tabIndex={0}
+      aria-label="Настройка станции"
+      aria-valuemin={1}
+      aria-valuemax={stations.length}
+      aria-valuenow={activeIndex + 1}
+      aria-valuetext={stations[activeIndex].name}
+      onKeyDown={handleKeyDown}
       className="relative aspect-square w-[58.5%] max-w-[240px] touch-none select-none cursor-grab active:cursor-grabbing"
       style={{
         borderRadius: '50%',

@@ -43,7 +43,7 @@ function App() {
       <StationTicks activeIndex={stationIndex} onSelect={setStationIndex} />
 
       <div className="flex justify-center px-[36px] pt-[6px] pb-[36px]">
-        <JogWheel onStep={stepStation} />
+        <JogWheel activeIndex={stationIndex} onStep={stepStation} />
       </div>
 
       <audio ref={audioRef} crossOrigin="anonymous" preload="none" />
