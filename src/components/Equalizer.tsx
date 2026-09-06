@@ -15,6 +15,26 @@ const RELEASE = 0.12
 // Доля высоты, начиная с которой столбик считается "пиковым" и подсвечивается акцентом.
 const PEAK_THRESHOLD = 0.72
 
+// Safari отдаёт нули из getByteFrequencyData для живых стримов (давний баг
+// движка: https://developer.apple.com/forums/thread/56362), а в Yandex
+// Browser Web Audio API зашумлён защитой от аудио-фингерпринтинга — в обоих
+// случаях звук играет нормально, а анализатор молчит. Столько подряд немых
+// кадров (~1.5с при 60fps) считаем достаточным, чтобы решить: реальных
+// данных не будет, и подменить их декоративной анимацией — иначе эквалайзер
+// выглядит сломанным на играющей станции.
+const SILENT_FRAMES_BEFORE_FALLBACK = 90
+
+// Не случайный шум по кадрам (при ATTACK=0.6 он дёргался бы), а гладкая
+// сумма синусоид со своим сдвигом фазы и скоростью на каждый столбик —
+// движение похоже на музыку, но не привязано к реальному сигналу.
+function syntheticTarget(index: number, time: number): number {
+  const phase = index * 0.7
+  const speed = 0.0016 + (index % 5) * 0.0004
+  const base = 0.4 + 0.28 * Math.sin(time * speed + phase)
+  const flicker = 0.18 * Math.sin(time * speed * 3.1 + phase * 1.7)
+  return Math.max(0, Math.min(1, base + flicker))
+}
+
 export function Equalizer({ analyser, isPlaying }: EqualizerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const heightsRef = useRef<Float32Array>(new Float32Array(NUM_BARS))
@@ -79,18 +99,36 @@ export function Equalizer({ analyser, isPlaying }: EqualizerProps) {
     const rootStyle = getComputedStyle(document.documentElement)
     const peakColor = rootStyle.getPropertyValue('--color-accent').trim() || '#ff611a'
     let frameId = 0
+    let silentFrames = 0
+    let usingFallback = false
 
     const draw = () => {
       frameId = requestAnimationFrame(draw)
       analyser.getByteFrequencyData(data)
 
+      let total = 0
+      for (let i = 0; i < data.length; i++) total += data[i]
+
+      if (total > 0) {
+        silentFrames = 0
+        usingFallback = false
+      } else {
+        silentFrames += 1
+        if (silentFrames > SILENT_FRAMES_BEFORE_FALLBACK) usingFallback = true
+      }
+
       ctx.clearRect(0, 0, width, height)
 
       for (let i = 0; i < NUM_BARS; i++) {
-        const [lo, hi] = bandRanges[i]
-        let sum = 0
-        for (let bin = lo; bin < hi; bin++) sum += data[bin]
-        const target = sum / (hi - lo) / 255
+        let target: number
+        if (usingFallback) {
+          target = syntheticTarget(i, performance.now())
+        } else {
+          const [lo, hi] = bandRanges[i]
+          let sum = 0
+          for (let bin = lo; bin < hi; bin++) sum += data[bin]
+          target = sum / (hi - lo) / 255
+        }
 
         const rate = target > heights[i] ? ATTACK : RELEASE
         heights[i] += (target - heights[i]) * rate

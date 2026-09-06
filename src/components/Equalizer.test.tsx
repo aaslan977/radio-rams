@@ -79,3 +79,74 @@ describe('Equalizer: размер канваса', () => {
     expect(lastCall?.[1]).toBe(CSS_HEIGHT - 2)
   })
 })
+
+describe('Equalizer: декоративный фолбэк при немом анализаторе', () => {
+  beforeEach(stubLayout)
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    vi.restoreAllMocks()
+    Reflect.deleteProperty(HTMLCanvasElement.prototype, 'clientWidth')
+    Reflect.deleteProperty(HTMLCanvasElement.prototype, 'clientHeight')
+  })
+
+  // requestAnimationFrame реальным таймером в jsdom не гоняем — кладём
+  // колбэки в очередь и прокручиваем их вручную, чтобы за один синхронный
+  // тест смоделировать полторы секунды воспроизведения (~90 кадров).
+  function stubFrames() {
+    const queue: FrameRequestCallback[] = []
+    vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => {
+      queue.push(cb)
+      return queue.length
+    })
+    vi.stubGlobal('cancelAnimationFrame', () => {})
+    return {
+      flush(times: number) {
+        for (let i = 0; i < times; i++) {
+          const cb = queue.shift()
+          if (!cb) break
+          cb(i)
+        }
+      },
+    }
+  }
+
+  function fakeAnalyser(fillValue: number): AnalyserNode {
+    return {
+      frequencyBinCount: 32,
+      getByteFrequencyData: (arr: Uint8Array) => arr.fill(fillValue),
+    } as unknown as AnalyserNode
+  }
+
+  it('на живом сигнале не подменяет данные — высоты столбиков остаются на нуле', () => {
+    vi.stubGlobal('devicePixelRatio', 1)
+    const frames = stubFrames()
+
+    render(<Equalizer analyser={fakeAnalyser(0)} isPlaying={true} />)
+    fillRect.mockClear()
+    frames.flush(1)
+
+    // Один немой кадр — ещё не повод считать анализатор сломанным:
+    // столбики остаются на минимальной высоте, как и на настоящей тишине.
+    const heights = fillRect.mock.calls.map((call) => call[3])
+    expect(heights.every((h) => h <= 2)).toBe(true)
+  })
+
+  it('после ~1.5с сплошных нулей на активном воспроизведении включает декоративную анимацию', () => {
+    vi.stubGlobal('devicePixelRatio', 1)
+    const frames = stubFrames()
+
+    render(<Equalizer analyser={fakeAnalyser(0)} isPlaying={true} />)
+    frames.flush(150)
+    fillRect.mockClear()
+    frames.flush(1)
+
+    // Баг Safari/защита от фингерпринтинга в Yandex Browser держат
+    // getByteFrequencyData на нуле, а звук при этом играет — эквалайзер не
+    // должен застревать плоской линией: столбики должны разъехаться по
+    // высоте вместо одинаковой минимальной.
+    const heights = fillRect.mock.calls.map((call) => call[3] as number)
+    expect(heights.some((h) => h > 2)).toBe(true)
+    expect(new Set(heights.map((h) => Math.round(h * 100))).size).toBeGreaterThan(1)
+  })
+})
