@@ -101,22 +101,31 @@ export function useAudioPlayer() {
 
   useEffect(() => clearRetryTimeout, [])
 
-  const togglePlay = () => {
+  // play и pause разведены, а не спрятаны внутрь togglePlay, потому что у
+  // системного плеера кнопки раздельные: «play» с экрана блокировки во время
+  // игры не должен оказаться паузой из-за переключателя.
+  const play = () => {
     const audio = audioRef.current
     if (!audio) return
-
-    if (wantsPlaybackRef.current) {
-      wantsPlaybackRef.current = false
-      clearRetryTimeout()
-      retryCountRef.current = 0
-      audio.pause()
-      setStatus('stopped')
-    } else {
-      wantsPlaybackRef.current = true
-      if (!audio.src) audio.src = station.streamUrl
-      attemptPlay()
-    }
+    wantsPlaybackRef.current = true
+    if (!audio.src) audio.src = station.streamUrl
+    attemptPlay()
   }
 
-  return { audioRef, togglePlay }
+  const pause = () => {
+    const audio = audioRef.current
+    if (!audio) return
+    wantsPlaybackRef.current = false
+    clearRetryTimeout()
+    retryCountRef.current = 0
+    audio.pause()
+    setStatus('stopped')
+  }
+
+  const togglePlay = () => {
+    if (wantsPlaybackRef.current) pause()
+    else play()
+  }
+
+  return { audioRef, play, pause, togglePlay }
 }

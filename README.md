@@ -31,7 +31,8 @@ npm run generate:icons  # перегенерировать растровые и
 src/
 ├── components/   # DeviceShell, PlayButton, Display, SpeakerGrille,
 │                 # StationTicks, JogWheel, Equalizer
-├── hooks/        # useAudioPlayer (live-стрим + retry), useAudioAnalyser
+├── hooks/        # useAudioPlayer (live-стрим + retry), useAudioAnalyser,
+│                 # useMediaSession (экран блокировки, кнопки на наушниках)
 ├── store/        # Zustand: текущая станция, статус
 ├── lib/          # список станций и чистая логика без React:
 │                 # spectrum.ts (биннинг FFT), grille.ts (шаг решётки)
