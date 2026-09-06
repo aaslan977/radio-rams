@@ -30,7 +30,19 @@ function normalizeAngleDelta(delta: number): number {
 }
 
 export function JogWheel({ activeIndex, onStep }: JogWheelProps) {
-  const tiks = useTiks({ theme: 'soft' })
+  // Громкость по умолчанию у tiks — 0.3 при диапазоне [0, 1]; поднято до 0.45
+  // (примерно +3.5 дБ), потому что на фоне играющей станции щелчок деления
+  // терялся.
+  //
+  // Внимание: громкость у tiks ОБЩАЯ на всё приложение. Экземпляр из useTiks
+  // хранит только тему, а звук играет модульный синглтон — setVolume у него
+  // один на всех. Амплитуда каждого звука зашита константой в генераторе, темой
+  // не регулируется, так что поднять только диск, не трогая кнопку play,
+  // библиотека не позволяет: она тоже звучит на +3.5 дБ. PlayButton громкость
+  // не передаёт, а init применяет её только когда она задана явно, — поэтому
+  // значение отсюда и остаётся действующим. Не добавляй volume в PlayButton:
+  // он молча перебьёт это значение.
+  const tiks = useTiks({ theme: 'soft', volume: 0.45 })
   const containerRef = useRef<HTMLDivElement>(null)
   const rotation = useMotionValue(0)
   const lastPointerAngleRef = useRef(0)
