@@ -1,4 +1,5 @@
 import { stations } from '../lib/stations'
+import { vibrate } from '../lib/haptics'
 
 interface StationTicksProps {
   activeIndex: number
@@ -19,7 +20,10 @@ export function StationTicks({ activeIndex, onSelect }: StationTicksProps) {
         <button
           key={station.id}
           type="button"
-          onClick={() => onSelect(i)}
+          onClick={() => {
+            vibrate(8)
+            onSelect(i)
+          }}
           aria-label={station.name}
           aria-current={i === activeIndex}
           className={TICK_CLASS}

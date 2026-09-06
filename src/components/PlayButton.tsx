@@ -1,4 +1,5 @@
 import { useTiks } from '@rexa-developer/tiks/react'
+import { vibrate } from '../lib/haptics'
 
 interface PlayButtonProps {
   active: boolean
@@ -12,6 +13,7 @@ export function PlayButton({ active, onToggle }: PlayButtonProps) {
     // active — состояние ДО переключения: включаем — success, выключаем — error.
     if (active) tiks.error()
     else tiks.success()
+    vibrate(active ? 12 : [10, 40, 10])
     onToggle()
   }
 

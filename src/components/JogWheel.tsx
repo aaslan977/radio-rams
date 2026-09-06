@@ -3,6 +3,7 @@ import { useDrag } from '@use-gesture/react'
 import { useMotionValue, useMotionValueEvent } from 'framer-motion'
 import { useTiks } from '@rexa-developer/tiks/react'
 import { stations } from '../lib/stations'
+import { vibrate } from '../lib/haptics'
 
 interface JogWheelProps {
   activeIndex: number
@@ -66,11 +67,13 @@ export function JogWheel({ activeIndex, onStep }: JogWheelProps) {
     while (accumulatedRef.current >= STEP_DEG) {
       onStep(1)
       tiks.click()
+      vibrate(8)
       accumulatedRef.current -= STEP_DEG
     }
     while (accumulatedRef.current <= -STEP_DEG) {
       onStep(-1)
       tiks.click()
+      vibrate(8)
       accumulatedRef.current += STEP_DEG
     }
   })
@@ -82,6 +85,7 @@ export function JogWheel({ activeIndex, onStep }: JogWheelProps) {
     event.preventDefault()
     onStep(delta)
     tiks.click()
+    vibrate(8)
     // Доворачиваем диск на тот же шаг, что и мышью — чтобы с клавиатуры
     // управление выглядело так же, а не только меняло станцию.
     rotation.set(rotation.get() + delta * STEP_DEG)
