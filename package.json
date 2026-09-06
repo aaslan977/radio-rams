@@ -13,6 +13,7 @@
     "generate:icons": "pwa-assets-generator --override"
   },
   "dependencies": {
+    "@rexa-developer/tiks": "^0.3.0",
     "@use-gesture/react": "^10.3.1",
     "framer-motion": "^13.2.0",
     "react": "^19.2.8",

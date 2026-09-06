@@ -3,11 +3,6 @@ import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest'
 import { JogWheel } from './JogWheel'
 import { stations } from '../lib/stations'
 
-// Звуки лезут в Web Audio, которого в jsdom нет.
-vi.mock('../hooks/useTactileSound', () => ({
-  useTactileSound: () => ({ play: () => {} }),
-}))
-
 describe('JogWheel: управление с клавиатуры', () => {
   let onStep: Mock<(delta: number) => void>
 

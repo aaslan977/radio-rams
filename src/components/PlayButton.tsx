@@ -1,4 +1,4 @@
-import { useTactileSound } from '../hooks/useTactileSound'
+import { useTiks } from '@rexa-developer/tiks/react'
 
 interface PlayButtonProps {
   active: boolean
@@ -6,10 +6,12 @@ interface PlayButtonProps {
 }
 
 export function PlayButton({ active, onToggle }: PlayButtonProps) {
-  const { play } = useTactileSound()
+  const tiks = useTiks({ theme: 'soft' })
 
   const handleClick = () => {
-    play('click')
+    // active — состояние ДО переключения: включаем — success, выключаем — error.
+    if (active) tiks.error()
+    else tiks.success()
     onToggle()
   }
 

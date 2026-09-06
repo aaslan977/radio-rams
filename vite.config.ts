@@ -12,12 +12,6 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'icons/favicon.ico', 'icons/apple-touch-icon-180x180.png'],
-      workbox: {
-        // Дефолтный globPatterns — {js,css,html,ico,png,svg}, из-за чего .wav
-        // не попадали в precache: офлайн-оболочка запускалась молча, без
-        // тактильных звуков. Их всего 50 КБ.
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,wav}'],
-      },
       manifest: {
         name: 'Radio',
         short_name: 'Radio',

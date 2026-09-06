@@ -1,7 +1,7 @@
 import { useRef, type KeyboardEvent } from 'react'
 import { useDrag } from '@use-gesture/react'
 import { useMotionValue, useMotionValueEvent } from 'framer-motion'
-import { useTactileSound } from '../hooks/useTactileSound'
+import { useTiks } from '@rexa-developer/tiks/react'
 import { stations } from '../lib/stations'
 
 interface JogWheelProps {
@@ -29,7 +29,7 @@ function normalizeAngleDelta(delta: number): number {
 }
 
 export function JogWheel({ activeIndex, onStep }: JogWheelProps) {
-  const { play } = useTactileSound()
+  const tiks = useTiks({ theme: 'soft' })
   const containerRef = useRef<HTMLDivElement>(null)
   const rotation = useMotionValue(0)
   const lastPointerAngleRef = useRef(0)
@@ -49,9 +49,8 @@ export function JogWheel({ activeIndex, onStep }: JogWheelProps) {
     return (Math.atan2(y - cy, x - cx) * 180) / Math.PI
   }
 
-  const bind = useDrag(({ xy: [x, y], first, last }) => {
+  const bind = useDrag(({ xy: [x, y], first }) => {
     if (first) {
-      play('click')
       lastPointerAngleRef.current = pointerAngle(x, y)
       accumulatedRef.current = 0
       return
@@ -66,16 +65,14 @@ export function JogWheel({ activeIndex, onStep }: JogWheelProps) {
 
     while (accumulatedRef.current >= STEP_DEG) {
       onStep(1)
-      play('wheelDetent')
+      tiks.click()
       accumulatedRef.current -= STEP_DEG
     }
     while (accumulatedRef.current <= -STEP_DEG) {
       onStep(-1)
-      play('wheelDetent')
+      tiks.click()
       accumulatedRef.current += STEP_DEG
     }
-
-    if (last) play('release')
   })
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -84,7 +81,7 @@ export function JogWheel({ activeIndex, onStep }: JogWheelProps) {
     // Иначе стрелки прокрутят страницу вместо настройки.
     event.preventDefault()
     onStep(delta)
-    play('wheelDetent')
+    tiks.click()
     // Доворачиваем диск на тот же шаг, что и мышью — чтобы с клавиатуры
     // управление выглядело так же, а не только меняло станцию.
     rotation.set(rotation.get() + delta * STEP_DEG)

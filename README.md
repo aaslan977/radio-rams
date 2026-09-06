@@ -31,14 +31,13 @@ npm run generate:icons  # перегенерировать растровые и
 src/
 ├── components/   # DeviceShell, PlayButton, Display, SpeakerGrille,
 │                 # StationTicks, JogWheel, Equalizer
-├── hooks/        # useAudioPlayer (live-стрим + retry), useAudioAnalyser,
-│                 # useTactileSound
+├── hooks/        # useAudioPlayer (live-стрим + retry), useAudioAnalyser
 ├── store/        # Zustand: текущая станция, статус
 ├── lib/          # stations.ts — список станций
 └── styles/       # Tailwind + design tokens
-
-public/sounds/    # тактильные звуки (Kenney "UI Audio", CC0 — см. LICENSE.txt)
 ```
+
+Тактильные звуки — [@rexa-developer/tiks](https://www.npmjs.com/package/@rexa-developer/tiks) (процедурная синтезация, без аудиофайлов).
 
 ## Статус
 
