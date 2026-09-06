@@ -38,8 +38,15 @@ export function useAudioAnalyser(audioRef: RefObject<HTMLAudioElement | null>) {
     const node = context.createAnalyser()
     node.fftSize = 256
 
+    // source -> destination напрямую, а анализатор подключен параллельно, а не
+    // последовательно в цепи к выходу: в Safari/iOS сериальная цепь
+    // source -> analyser -> destination нередко даёт звук, но
+    // getByteFrequencyData стабильно отдаёт нули (известная особенность
+    // WebKit для потокового <audio>). Параллельное подключение не зависит от
+    // этого — и заодно звук больше не пропадает, если создание analyser-узла
+    // почему-то не удалось.
+    source.connect(context.destination)
     source.connect(node)
-    node.connect(context.destination)
 
     contextRef.current = context
     setAnalyser(node)
@@ -66,6 +73,7 @@ export function useAudioAnalyser(audioRef: RefObject<HTMLAudioElement | null>) {
       context.removeEventListener('statechange', resumeIfNeeded)
       document.removeEventListener('visibilitychange', resumeIfNeeded)
       source.disconnect(node)
+      source.disconnect(context.destination)
       node.disconnect()
       setAnalyser(null)
     }
