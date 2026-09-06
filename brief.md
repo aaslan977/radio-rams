@@ -52,7 +52,7 @@
 | KEXP 90.3 FM (Сиэтл) | Инди/альтернатива | `https://kexp.streamguys1.com/kexp160.aac` | ✅ `*` | Официальная страница «Stream KEXP Live» — прямое приглашение использовать в сторонних плеерах |
 | WWOZ 90.7 FM (Новый Орлеан) | Джаз/блюз/рутс | `https://wwoz-sc.streamguys1.com/wwoz-hi.mp3` | ✅ `*` | Официальная Streaming Help страница, URL сделан специально для сторонних плееров (HTTPS-хост `streamguys1.com`, а не `streamguys.com` — у второго проблема с сертификатом) |
 | Radio Swiss Jazz | Джаз/лаунж | `https://stream.srg-ssr.ch/srgssr/rsj/mp3/128` | ✅ `*` | SRG SSR (гос. радио и ТВ Швейцарии), URL опубликован для самостоятельного добавления в любые устройства |
-| Radio Swiss Classic | Классика | `https://stream.srg-ssr.ch/m/rsc_de/mp3_128` | ✅ `*` | Тот же SRG SSR, та же политика |
+| Radio Swiss Classic | Классика | `https://stream.srg-ssr.ch/srgssr/rsc_de/mp3/128` | ✅ `*` | Тот же SRG SSR, та же политика. Старый URL `/m/rsc_de/mp3_128` не использовать: он редиректит на `http://` и блокируется как mixed content |
 | Radio Swiss Pop | Поп | `https://stream.srg-ssr.ch/srgssr/rsp/mp3/128` | ✅ `*` | Тот же SRG SSR, та же политика (третья станция того же семейства) |
 | KNKX 88.5 FM (Такома/Сиэтл) | Новости/джаз | `https://knkx-live-a.edge.audiocdn.com/6284_128k` | ✅ `*` | Официальная страница KNKX «Streaming Links» — прямая цитата: «streaming links for listening to KNKX and Jazz24 on most internet-enabled devices such as receivers, network streamers, Sonos speakers and more» |
 | WFUV 90.7 FM (Нью-Йорк, Fordham University) | Альтернатива/рутс | `https://onair.wfuv.org/onair-hi` | ✅ `*` | Официальная страница «How to Stream FUV» — прямо описывает вставку URL потока в сторонний медиаплеер (File → Open Stream URL) |

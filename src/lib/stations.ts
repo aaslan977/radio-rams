@@ -25,7 +25,7 @@ export const stations: Station[] = [
     id: 'radio-swiss-classic',
     name: 'Radio Swiss Classic',
     genre: 'Классика',
-    streamUrl: 'https://stream.srg-ssr.ch/m/rsc_de/mp3_128',
+    streamUrl: 'https://stream.srg-ssr.ch/srgssr/rsc_de/mp3/128',
   },
   {
     id: 'radio-swiss-pop',
