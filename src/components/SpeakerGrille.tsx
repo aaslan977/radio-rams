@@ -1,22 +1,9 @@
 import { useLayoutEffect, useRef, useState } from 'react'
-
-const DOT_SIZE = 8
-const GAP = 9
+import { DOT_SIZE, computeStep } from '../lib/grille'
 
 interface Size {
   width: number
   height: number
-}
-
-// Раньше CSS grid (`auto-fill` + `justify-between`) сам подбирал, сколько
-// целых точек влезает по ширине/высоте, и растягивал зазоры так, чтобы
-// первая и последняя точка стояли строго по краям — ни одна не обрезалась.
-// У SVG-паттерна нет аналога auto-fill, поэтому шаг сетки пересчитывается
-// вручную под фактический размер контейнера тем же способом.
-function computeStep(size: number): number {
-  if (size <= 0) return DOT_SIZE + GAP
-  const count = Math.max(1, Math.floor((size + GAP) / (DOT_SIZE + GAP)))
-  return count > 1 ? (size - DOT_SIZE) / (count - 1) : size
 }
 
 export function SpeakerGrille() {

@@ -1,4 +1,5 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { buildLogBinRanges } from '../lib/spectrum'
 
 interface EqualizerProps {
   analyser: AnalyserNode | null
@@ -14,37 +15,43 @@ const RELEASE = 0.12
 // Доля высоты, начиная с которой столбик считается "пиковым" и подсвечивается акцентом.
 const PEAK_THRESHOLD = 0.72
 
-// Бины FFT линейны по частоте, а музыкальная энергия — нет: почти вся сила
-// сосредоточена в первых нескольких бинах, и через линейную выборку правая
-// половina столбиков остаётся почти неподвижной. Группируем бины по
-// логарифмической шкале, чтобы бас, середина и верха были одинаково заметны.
-function buildLogBinRanges(bandCount: number, binCount: number): Array<[number, number]> {
-  const minBin = 1 // пропускаем DC-бин (индекс 0)
-  const maxBin = binCount - 1
-  const logMin = Math.log2(minBin)
-  const logMax = Math.log2(maxBin)
-
-  const ranges: Array<[number, number]> = []
-  for (let i = 0; i < bandCount; i++) {
-    const lo = Math.max(minBin, Math.round(2 ** (logMin + ((logMax - logMin) * i) / bandCount)))
-    const hiRaw = Math.round(2 ** (logMin + ((logMax - logMin) * (i + 1)) / bandCount))
-    const hi = Math.min(maxBin + 1, Math.max(lo + 1, hiRaw))
-    ranges.push([lo, hi])
-  }
-  return ranges
-}
-
 export function Equalizer({ analyser, isPlaying }: EqualizerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const heightsRef = useRef<Float32Array>(new Float32Array(NUM_BARS))
+  const [size, setSize] = useState({ width: 0, height: 0 })
+
+  // Размер канваса раньше был прибит константами (280×14) при растягивающем
+  // w-full: буфер не совпадал с реальной шириной и масштабировался браузером,
+  // а на экранах с devicePixelRatio > 1 столбики к тому же были мыльными.
+  // Меряем фактический размер и заводим буфер под плотность пикселей.
+  useLayoutEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const update = () => setSize({ width: canvas.clientWidth, height: canvas.clientHeight })
+    update()
+
+    const observer = new ResizeObserver(update)
+    observer.observe(canvas)
+    return () => observer.disconnect()
+  }, [])
 
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
+    const { width, height } = size
+    if (width <= 0 || height <= 0) return
+
+    const dpr = window.devicePixelRatio || 1
+    canvas.width = Math.round(width * dpr)
+    canvas.height = Math.round(height * dpr)
+
     const ctx = canvas.getContext('2d')
     if (!ctx) return
+    // Смена width/height сбрасывает состояние контекста, поэтому трансформация
+    // ставится после неё. Дальше рисуем в CSS-пикселях.
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
 
-    const { width, height } = canvas
     const barWidth = width / NUM_BARS
     // Приглушённее токена --color-ink-soft — на этой маленькой высоте
     // столбики не должны спорить по контрасту с названием станции.
@@ -99,7 +106,7 @@ export function Equalizer({ analyser, isPlaying }: EqualizerProps) {
     return () => {
       if (frameId) cancelAnimationFrame(frameId)
     }
-  }, [analyser, isPlaying])
+  }, [analyser, isPlaying, size])
 
-  return <canvas ref={canvasRef} width={280} height={14} className="h-3.5 w-full" />
+  return <canvas ref={canvasRef} className="h-3.5 w-full" />
 }

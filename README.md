@@ -33,7 +33,8 @@ src/
 │                 # StationTicks, JogWheel, Equalizer
 ├── hooks/        # useAudioPlayer (live-стрим + retry), useAudioAnalyser
 ├── store/        # Zustand: текущая станция, статус
-├── lib/          # stations.ts — список станций
+├── lib/          # список станций и чистая логика без React:
+│                 # spectrum.ts (биннинг FFT), grille.ts (шаг решётки)
 └── styles/       # Tailwind + design tokens
 ```
 

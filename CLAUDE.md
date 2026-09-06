@@ -32,7 +32,8 @@ src/
 ├── components/   # презентационные компоненты, без побочных эффектов
 ├── hooks/        # вся работа с Web Audio и <audio> изолирована здесь
 ├── store/        # Zustand: текущая станция и статус воспроизведения
-├── lib/          # stations.ts — список станций
+├── lib/          # список станций и чистая логика без React:
+│                 # spectrum.ts (биннинг FFT), grille.ts (шаг решётки)
 ├── types/        # общие типы (Station, PlaybackStatus)
 └── styles/       # Tailwind + design tokens в @theme
 ```
