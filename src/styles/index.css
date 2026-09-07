@@ -4,6 +4,10 @@
   --color-cream: #f7f7f7;
   --color-cream-dark: #eeeeee;
   --color-cream-shadow: #dcdcdc;
+  /* Фон за корпусом отделён от --color-cream-shadow, хотя раньше был им же:
+     тот остался цветом кромки (кольцо вокруг ручки), и осветление фона не
+     должно было заодно размывать её. */
+  --color-backdrop: #e8e8e8;
   --color-ink: #1c1c1c;
   --color-ink-soft: #8a8a8a;
   --color-line: #1c1c1c1f;
@@ -12,7 +16,7 @@
 }
 
 body {
-  background-color: var(--color-cream-shadow);
+  background-color: var(--color-backdrop);
   color: var(--color-ink);
   font-family: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
 }

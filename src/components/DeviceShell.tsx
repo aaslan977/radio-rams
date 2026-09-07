@@ -9,23 +9,34 @@ interface DeviceShellProps {
 // карточка с отступами и тенью.
 export function DeviceShell({ children }: DeviceShellProps) {
   return (
-    <div className="flex h-dvh items-center justify-center bg-cream sm:h-auto sm:min-h-screen sm:items-start sm:bg-cream-shadow sm:px-14 sm:py-[40px]">
+    <div className="flex h-dvh items-center justify-center bg-cream sm:h-auto sm:min-h-screen sm:items-start sm:bg-backdrop sm:px-14 sm:py-[40px]">
       <div
         className="flex h-full w-full flex-col overflow-hidden bg-cream sm:h-auto sm:max-w-[360px] sm:rounded-[20px]"
         style={{
           // Мягкая многослойная тень вместо жёсткой "ступеньки" — имитирует
           // реальный физический объект, лежащий на поверхности: близкий
-          // контактный слой + средний + дальний рассеянный. Плюс лёгкие
-          // внутренние тени по краю — поверхность слегка "утоплена" внутри
-          // корпуса, как на референсе, а не идеально плоская.
+          // контактный слой + средний + дальний рассеянный. Ослаблена после
+          // осветления фона: на светлом заднике прежняя плотность читалась как
+          // тяжёлый ореол, а не как касание поверхности.
+          //
+          // Внутренние тени идут по всему периметру, а не только сверху и
+          // снизу: источник света один и сверху, поэтому по верхней кромке —
+          // блик, по остальным трём — затенение, плюс общая виньетка на всю
+          // площадь. Вместе это читается как поверхность, утопленная в корпус,
+          // а не как плоский прямоугольник. Значения альфы намеренно в районе
+          // 0.04–0.06: на нейтрально-сером любое усиление сразу выглядит
+          // грязным пятном, а не объёмом.
           boxShadow: [
-            'inset 0 1px 2px rgba(255,255,255,0.8)',
-            'inset 0 -1px 3px rgba(0,0,0,0.06)',
-            'inset 0 0 20px rgba(0,0,0,0.04)',
-            '0 1px 2px rgba(0,0,0,0.08)',
-            '0 8px 16px -4px rgba(0,0,0,0.14)',
-            '0 24px 48px -12px rgba(0,0,0,0.22)',
-            '0 48px 80px -24px rgba(0,0,0,0.28)',
+            'inset 0 1px 1px rgba(255,255,255,0.9)',
+            'inset 0 0 0 1px rgba(0,0,0,0.04)',
+            'inset 0 -2px 4px rgba(0,0,0,0.06)',
+            'inset 2px 0 5px rgba(0,0,0,0.04)',
+            'inset -2px 0 5px rgba(0,0,0,0.04)',
+            'inset 0 0 40px rgba(0,0,0,0.05)',
+            '0 1px 2px rgba(0,0,0,0.05)',
+            '0 6px 12px -4px rgba(0,0,0,0.08)',
+            '0 16px 32px -12px rgba(0,0,0,0.12)',
+            '0 32px 56px -24px rgba(0,0,0,0.16)',
           ].join(', '),
         }}
       >
