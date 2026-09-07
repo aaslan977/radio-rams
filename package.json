@@ -10,8 +10,7 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest",
-    "generate:og": "node scripts/generate-og.mjs"
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@rexa-developer/tiks": "^0.3.0",
