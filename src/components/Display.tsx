@@ -20,7 +20,7 @@ export function Display({ stationName, status, analyser, isPlaying }: DisplayPro
   const label = STATUS_LABELS[status] ?? stationName
 
   return (
-    <div className="flex flex-1 flex-col justify-center gap-2 px-6 py-5">
+    <div className="flex flex-1 flex-col justify-center gap-2 p-5">
       <TextScramble text={label} className="truncate text-ink" />
       <Equalizer analyser={analyser} isPlaying={isPlaying} />
     </div>
