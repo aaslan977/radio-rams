@@ -184,7 +184,10 @@ export function JogWheel({ activeIndex, onStep }: JogWheelProps) {
           top: '14%',
           left: '50%',
           transform: 'translateX(-50%)',
-          background: 'var(--color-cream-dark)',
+          // cream-dark (контраст 1.08:1 к лицевой части) гнездо индикатора
+          // делал почти невидимым — cream-shadow того же кольца ручки даёт
+          // 1.28:1, не вводя нового цвета.
+          background: 'var(--color-cream-shadow)',
         }}
       />
     </div>
