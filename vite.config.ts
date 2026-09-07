@@ -19,7 +19,7 @@ export default defineConfig({
       // Регистрацию делаем вручную в main.tsx через virtual:pwa-register,
       // где reload на обновление настроен явно.
       injectRegister: false,
-      includeAssets: ['favicon.svg', 'icons/favicon.ico', 'icons/apple-touch-icon-180x180.png'],
+      includeAssets: ['favicon.png', 'icons/apple-touch-icon-180x180.png'],
       manifest: {
         name: 'radio rams',
         short_name: 'radio rams',

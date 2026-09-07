@@ -11,7 +11,6 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "generate:icons": "pwa-assets-generator --override",
     "generate:og": "node scripts/generate-og.mjs"
   },
   "dependencies": {
@@ -24,19 +23,16 @@
     "zustand": "^5.0.15"
   },
   "devDependencies": {
-    "@fontsource/ibm-plex-sans": "^5.3.0",
     "@tailwindcss/vite": "^4.3.3",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
-    "@vite-pwa/assets-generator": "^1.0.2",
     "@vitejs/plugin-react": "^6.1.0",
     "@vitest/ui": "^5.0.0",
     "jsdom": "^30.0.1",
     "oxlint": "^1.79.0",
-    "satori": "^0.33.4",
     "tailwindcss": "^4.3.3",
     "typescript": "~6.0.2",
     "vite": "^8.2.2",

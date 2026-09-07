@@ -21,12 +21,11 @@ npm run build     # прод-сборка + генерация PWA (manifest/ser
 npm run preview   # локальный просмотр прод-сборки
 npm run test      # тесты (Vitest)
 npm run lint      # линт (oxlint)
-
-npm run generate:icons  # перегенерировать растровые иконки PWA из public/icons/icon.svg
 ```
 
-Иконки лежат в репозитории готовыми — команда нужна только после правки
-исходного `icon.svg`.
+Иконки (`public/favicon.png`, `public/icons/*`) и картинка для Open Graph
+(`public/og-image.jpg`) — готовые файлы, кладутся в репозиторий вручную,
+никакой генерации из исходников нет.
 
 ## Структура
 
