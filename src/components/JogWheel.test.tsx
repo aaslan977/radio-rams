@@ -50,3 +50,100 @@ describe('JogWheel: управление с клавиатуры', () => {
     expect(prevented).toBe(true)
   })
 })
+
+describe('JogWheel: пружина деления при шаге с клавиатуры', () => {
+  function wheel() {
+    render(<JogWheel activeIndex={0} onStep={() => {}} />)
+    return screen.getByRole('slider')
+  }
+
+  function angleOf(el: HTMLElement): number {
+    const match = (el.style.transform || '').match(/rotate\(([-0-9.]+)deg\)/)
+    return match ? parseFloat(match[1]) : 0
+  }
+
+  // Пружина крутится на requestAnimationFrame, поэтому опрашиваем реальными
+  // кадрами: с фейковыми таймерами framer-motion просто не поедет.
+  async function sampleAngles(el: HTMLElement, frames: number): Promise<number[]> {
+    const angles: number[] = []
+    for (let i = 0; i < frames; i++) {
+      await new Promise((resolve) => setTimeout(resolve, 16))
+      angles.push(angleOf(el))
+    }
+    return angles
+  }
+
+  it('проскакивает деление и возвращается — иначе поворот выглядел бы телепортом', async () => {
+    const el = wheel()
+
+    fireEvent.keyDown(el, { key: 'ArrowRight' })
+    const angles = await sampleAngles(el, 25)
+
+    // Заброс за 45° и есть ощущение провала за упор; замер даёт около 4.9°.
+    expect(Math.max(...angles)).toBeGreaterThan(45)
+  })
+
+  it('серия быстрых нажатий набирает ровно по 45° на нажатие', async () => {
+    const el = wheel()
+
+    // Нажатия приходят, пока диск ещё в полёте: так ведёт себя автоповтор при
+    // зажатой стрелке. Если считать шаг от текущего угла, а не от цели, за
+    // нажатие набегало бы меньше 45° и диск отставал бы от списка станций.
+    for (let i = 0; i < 3; i++) {
+      fireEvent.keyDown(el, { key: 'ArrowRight' })
+      await new Promise((resolve) => setTimeout(resolve, 40))
+    }
+    const angles = await sampleAngles(el, 35)
+
+    expect(angles[angles.length - 1]).toBeCloseTo(135, 1)
+  })
+})
+
+describe('JogWheel: угол диска привязан к станции', () => {
+  function angleOf(el: HTMLElement): number {
+    const match = (el.style.transform || '').match(/rotate\(([-0-9.]+)deg\)/)
+    return match ? parseFloat(match[1]) : 0
+  }
+
+  async function settle(el: HTMLElement, frames = 35): Promise<number> {
+    for (let i = 0; i < frames; i++) {
+      await new Promise((resolve) => setTimeout(resolve, 16))
+    }
+    return angleOf(el)
+  }
+
+  it('встаёт на деление своей станции сразу при монтировании', () => {
+    render(<JogWheel activeIndex={3} onStep={() => {}} />)
+
+    expect(angleOf(screen.getByRole('slider'))).toBe(3 * 45)
+  })
+
+  it('внешняя смена станции доворачивает диск — раньше клик по засечке его не двигал', async () => {
+    const { rerender } = render(<JogWheel activeIndex={0} onStep={() => {}} />)
+    const el = screen.getByRole('slider')
+
+    rerender(<JogWheel activeIndex={1} onStep={() => {}} />)
+
+    expect(await settle(el)).toBeCloseTo(45, 1)
+  })
+
+  it('на стыке кольца идёт коротким путём вперёд, а не откручивается через весь список', async () => {
+    const { rerender } = render(<JogWheel activeIndex={7} onStep={() => {}} />)
+    const el = screen.getByRole('slider')
+    expect(angleOf(el)).toBe(7 * 45)
+
+    rerender(<JogWheel activeIndex={0} onStep={() => {}} />)
+
+    // 315 + 45 = 360, а не 0: путь назад через весь список дал бы именно 0.
+    expect(await settle(el)).toBeCloseTo(360, 1)
+  })
+
+  it('прыжок через полкольца тоже одним движением', async () => {
+    const { rerender } = render(<JogWheel activeIndex={0} onStep={() => {}} />)
+    const el = screen.getByRole('slider')
+
+    rerender(<JogWheel activeIndex={4} onStep={() => {}} />)
+
+    expect(await settle(el, 45)).toBeCloseTo(4 * 45, 1)
+  })
+})

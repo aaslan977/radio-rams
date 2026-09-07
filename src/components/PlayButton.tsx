@@ -1,4 +1,5 @@
 import { useTiks } from '@rexa-developer/tiks/react'
+import { UI_SOUND } from '../lib/sound'
 import { vibrate } from '../lib/haptics'
 
 interface PlayButtonProps {
@@ -7,7 +8,7 @@ interface PlayButtonProps {
 }
 
 export function PlayButton({ active, onToggle }: PlayButtonProps) {
-  const tiks = useTiks({ theme: 'soft' })
+  const tiks = useTiks(UI_SOUND)
 
   const handleClick = () => {
     // active — состояние ДО переключения: включаем — success, выключаем — error.
@@ -25,10 +26,11 @@ export function PlayButton({ active, onToggle }: PlayButtonProps) {
       aria-pressed={active}
       className="divider-r flex w-24 shrink-0 items-center justify-center"
     >
-      <span
-        className="flex items-center justify-center rounded-[2px]"
-        style={{ width: 64, height: 64, background: 'var(--color-cream)' }}
-      >
+      {/* Плашка 64×64 — только посадочное место для круглой кнопки, своей
+          заливки у неё быть не должно. Цвет у неё был тот же, что у корпуса,
+          но непрозрачный: inset-тени корпуса рисуются под содержимым, поэтому
+          плашка затирала затенение угла и читалась светлым квадратом. */}
+      <span className="flex items-center justify-center" style={{ width: 64, height: 64 }}>
         <span
           className="flex items-center justify-center rounded-full transition-shadow"
           style={{

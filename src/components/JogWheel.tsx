@@ -1,8 +1,10 @@
-import { useRef, type KeyboardEvent } from 'react'
+import { useEffect, useLayoutEffect, useRef, type KeyboardEvent } from 'react'
 import { useDrag } from '@use-gesture/react'
-import { useMotionValue, useMotionValueEvent } from 'framer-motion'
+import { animate, useMotionValue, useMotionValueEvent } from 'framer-motion'
 import { useTiks } from '@rexa-developer/tiks/react'
+import { UI_SOUND } from '../lib/sound'
 import { stations } from '../lib/stations'
+import { shortestStepDelta, wrapIndex } from '../lib/wheel'
 import { vibrate } from '../lib/haptics'
 
 interface JogWheelProps {
@@ -11,6 +13,16 @@ interface JogWheelProps {
 }
 
 const STEP_DEG = 45
+
+// Недодемпфированная пружина (damping ниже критического): диск проскакивает
+// деление на пару градусов и притягивается обратно — как будто провалился за
+// упор, а не остановился ровно там, где сказали.
+//
+// Только для клавиатуры. При драге кольцо обязано следовать за указателем 1:1,
+// и пружина там спорила бы с пальцем — ощущение щелчка деления в этом случае
+// даёт не движение, а звук и вибрация, ровно как у настоящего колеса: вал
+// жёстко связан с пальцем, деление слышно и осязаемо, но не видно.
+const DETENT_SPRING = { type: 'spring', stiffness: 300, damping: 20 } as const
 
 // Диск — <div> с жестами, клавиатура для него сама собой не работает. Без этих
 // клавиш станцию нельзя переключить с клавиатуры вообще: единственный
@@ -30,28 +42,54 @@ function normalizeAngleDelta(delta: number): number {
 }
 
 export function JogWheel({ activeIndex, onStep }: JogWheelProps) {
-  // Громкость по умолчанию у tiks — 0.3 при диапазоне [0, 1]; поднято до 0.45
-  // (примерно +3.5 дБ), потому что на фоне играющей станции щелчок деления
-  // терялся.
-  //
-  // Внимание: громкость у tiks ОБЩАЯ на всё приложение. Экземпляр из useTiks
-  // хранит только тему, а звук играет модульный синглтон — setVolume у него
-  // один на всех. Амплитуда каждого звука зашита константой в генераторе, темой
-  // не регулируется, так что поднять только диск, не трогая кнопку play,
-  // библиотека не позволяет: она тоже звучит на +3.5 дБ. PlayButton громкость
-  // не передаёт, а init применяет её только когда она задана явно, — поэтому
-  // значение отсюда и остаётся действующим. Не добавляй volume в PlayButton:
-  // он молча перебьёт это значение.
-  const tiks = useTiks({ theme: 'soft', volume: 0.45 })
+  const tiks = useTiks(UI_SOUND)
   const containerRef = useRef<HTMLDivElement>(null)
-  const rotation = useMotionValue(0)
+  // Угол диска — производная от выбранной станции, а не свободная величина:
+  // 45° на станцию, поэтому кружок-индикатор всегда стоит на своём делении и
+  // проходит одинаковое расстояние при любом способе переключения. Раньше
+  // rotation жил сам по себе, и клик по засечке не двигал диск вовсе.
+  const rotation = useMotionValue(activeIndex * STEP_DEG)
   const lastPointerAngleRef = useRef(0)
   const accumulatedRef = useRef(0)
+  const draggingRef = useRef(false)
+  // Непрерывный угол деления, к которому диск обязан прийти. Именно непрерывный,
+  // а не activeIndex * 45: на стыке кольца (последняя станция → первая) счёт от
+  // индекса открутил бы диск назад через весь список.
+  const rotationTargetRef = useRef(activeIndex * STEP_DEG)
+  // Станция, которую диск уже отработал. Нужна, чтобы отличить своё
+  // переключение от внешнего (клик по засечке) и не считать шаг дважды.
+  const settledIndexRef = useRef(activeIndex)
+
+  // Событие 'change' на стартовое значение не приходит, поэтому первый угол
+  // пишем руками: иначе диск с восстановленной из localStorage станцией
+  // рисовался бы на нуле и прыгнул бы на своё деление только при первом шаге.
+  useLayoutEffect(() => {
+    const el = containerRef.current
+    if (el) el.style.transform = `rotate(${rotation.get()}deg)`
+  }, [rotation])
 
   useMotionValueEvent(rotation, 'change', (latest) => {
     const el = containerRef.current
     if (el) el.style.transform = `rotate(${latest}deg)`
   })
+
+  // Собственный шаг диска: сдвигаем цель и сразу помечаем станцию отработанной,
+  // иначе эффект ниже принял бы её за внешнюю смену и добавил поворот второй раз.
+  const stepBy = (delta: number) => {
+    rotationTargetRef.current += delta * STEP_DEG
+    settledIndexRef.current = wrapIndex(settledIndexRef.current + delta, stations.length)
+    onStep(delta)
+  }
+
+  // Станцию сменили не диском (засечки, восстановление из localStorage) —
+  // доводим кольцо до её деления кратчайшей дугой.
+  useEffect(() => {
+    if (settledIndexRef.current === activeIndex) return
+    const delta = shortestStepDelta(settledIndexRef.current, activeIndex, stations.length)
+    settledIndexRef.current = activeIndex
+    rotationTargetRef.current += delta * STEP_DEG
+    animate(rotation, rotationTargetRef.current, DETENT_SPRING)
+  }, [activeIndex, rotation])
 
   const pointerAngle = (x: number, y: number): number => {
     const el = containerRef.current
@@ -62,10 +100,22 @@ export function JogWheel({ activeIndex, onStep }: JogWheelProps) {
     return (Math.atan2(y - cy, x - cx) * 180) / Math.PI
   }
 
-  const bind = useDrag(({ xy: [x, y], first }) => {
+  const bind = useDrag(({ xy: [x, y], first, last }) => {
     if (first) {
+      draggingRef.current = true
       lastPointerAngleRef.current = pointerAngle(x, y)
+      // Не обнуляем, а берём фактический недокрут: жест может начаться, пока
+      // предыдущая доводка ещё летит, и обнуление потеряло бы этот остаток.
+      accumulatedRef.current = rotation.get() - rotationTargetRef.current
+      return
+    }
+
+    if (last) {
+      draggingRef.current = false
+      // Палец отпущен — кольцо доводится пружиной до ближайшего деления.
+      // Недокрут меньше 45°, поэтому доводка всегда короткая.
       accumulatedRef.current = 0
+      animate(rotation, rotationTargetRef.current, DETENT_SPRING)
       return
     }
 
@@ -73,17 +123,19 @@ export function JogWheel({ activeIndex, onStep }: JogWheelProps) {
     const rawDelta = normalizeAngleDelta(currentAngle - lastPointerAngleRef.current)
     lastPointerAngleRef.current = currentAngle
 
+    // Во время жеста кольцо идёт за пальцем 1:1 — пружина здесь спорила бы
+    // с прямым управлением и читалась бы как лаг.
     rotation.set(rotation.get() + rawDelta)
     accumulatedRef.current += rawDelta
 
     while (accumulatedRef.current >= STEP_DEG) {
-      onStep(1)
+      stepBy(1)
       tiks.click()
       vibrate(8)
       accumulatedRef.current -= STEP_DEG
     }
     while (accumulatedRef.current <= -STEP_DEG) {
-      onStep(-1)
+      stepBy(-1)
       tiks.click()
       vibrate(8)
       accumulatedRef.current += STEP_DEG
@@ -95,12 +147,10 @@ export function JogWheel({ activeIndex, onStep }: JogWheelProps) {
     if (delta === undefined) return
     // Иначе стрелки прокрутят страницу вместо настройки.
     event.preventDefault()
-    onStep(delta)
+    stepBy(delta)
     tiks.click()
     vibrate(8)
-    // Доворачиваем диск на тот же шаг, что и мышью — чтобы с клавиатуры
-    // управление выглядело так же, а не только меняло станцию.
-    rotation.set(rotation.get() + delta * STEP_DEG)
+    animate(rotation, rotationTargetRef.current, DETENT_SPRING)
   }
 
   return (
