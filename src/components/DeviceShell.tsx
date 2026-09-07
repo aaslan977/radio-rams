@@ -7,9 +7,15 @@ interface DeviceShellProps {
 // На мобильном устройство занимает весь экран без полей — как нативное
 // приложение, а не карточка на фоне. С брейкпоинта sm возвращается плавающая
 // карточка с отступами и тенью.
+//
+// env(safe-area-inset-*) вместе с viewport-fit=cover в index.html — иначе
+// standalone PWA на iPhone сама резервирует безопасную зону под вырезом и
+// home-indicator, и в неё просвечивает фон body (--color-backdrop), а не
+// --color-cream этого контейнера. На десктопе env() резолвится в 0, брейкпоинт
+// sm: не задевает.
 export function DeviceShell({ children }: DeviceShellProps) {
   return (
-    <div className="flex h-dvh items-center justify-center bg-cream sm:h-auto sm:min-h-screen sm:items-start sm:bg-backdrop sm:px-14 sm:py-[40px]">
+    <div className="flex h-dvh items-center justify-center bg-cream pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] sm:h-auto sm:min-h-screen sm:items-start sm:bg-backdrop sm:px-14 sm:py-[40px]">
       <div
         className="flex h-full w-full flex-col overflow-hidden bg-cream sm:h-auto sm:max-w-[360px] sm:rounded-[20px]"
         style={{
