@@ -10,6 +10,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#f7f7f7" />
     <meta name="description" content="Веб-радиоприёмник в эстетике Braun с живым эквалайзером" />
+    <!-- У каждого превью-деплоя на Vercel свой поддомен: без canonical поисковик
+         может проиндексировать их как дубликаты основного адреса. -->
+    <link rel="canonical" href="https://radio-rams.vercel.app/" />
 
     <!-- Open Graph. URL абсолютные: краулеры Telegram, Slack и прочих забирают
          og:image отдельным запросом и относительный путь не резолвят. Размеры
@@ -34,7 +37,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <title>Radio</title>
+    <!-- Заголовок длиннее имени бренда намеренно: это ещё и строка в поисковой
+         выдаче, где голое «radio rams» ничего не объясняет. В og:title, наоборот,
+         дескриптор не нужен — там над ним стоит картинка с тем же словом, а под
+         ним описание. -->
+    <title>radio rams — веб-радиоприёмник в эстетике Braun</title>
   </head>
   <body>
     <div id="root"></div>

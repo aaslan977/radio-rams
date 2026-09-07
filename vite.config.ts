@@ -21,8 +21,8 @@ export default defineConfig({
       injectRegister: false,
       includeAssets: ['favicon.svg', 'icons/favicon.ico', 'icons/apple-touch-icon-180x180.png'],
       manifest: {
-        name: 'Radio',
-        short_name: 'Radio',
+        name: 'radio rams',
+        short_name: 'radio rams',
         description: 'Веб-радиоприёмник в эстетике Braun с живым эквалайзером',
         lang: 'ru',
         // Токен --color-cream. Раньше здесь оставался #f7f5f2 из прежней тёплой

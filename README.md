@@ -1,4 +1,4 @@
-# Radio
+# radio rams
 
 **Демо: [radio-rams.vercel.app](https://radio-rams.vercel.app/)** — открывается
 без установки, на телефоне ставится на домашний экран.
