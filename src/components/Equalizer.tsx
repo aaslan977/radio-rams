@@ -151,5 +151,5 @@ export function Equalizer({ analyser, isPlaying }: EqualizerProps) {
     }
   }, [analyser, isPlaying, size])
 
-  return <canvas ref={canvasRef} className="h-3.5 w-full" />
+  return <canvas ref={canvasRef} className="h-6 w-full" />
 }
