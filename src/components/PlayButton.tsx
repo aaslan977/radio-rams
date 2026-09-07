@@ -26,14 +26,11 @@ export function PlayButton({ active, onToggle }: PlayButtonProps) {
       aria-pressed={active}
       className="divider-r flex w-24 shrink-0 items-center justify-center"
     >
-      {/* Плашка 72×72 — только посадочное место для круглой кнопки, своей
+      {/* Плашка 64×64 — только посадочное место для круглой кнопки, своей
           заливки у неё быть не должно. Цвет у неё был тот же, что у корпуса,
           но непрозрачный: inset-тени корпуса рисуются под содержимым, поэтому
-          плашка затирала затенение угла и читалась светлым квадратом.
-          72 = 96 − 2×12: отступ до края кнопки уменьшен на 4px в паре с
-          паддингом Display (24 → 20px), чтобы кнопка не читалась просторнее
-          дисплея рядом с ней. */}
-      <span className="flex items-center justify-center" style={{ width: 72, height: 72 }}>
+          плашка затирала затенение угла и читалась светлым квадратом. */}
+      <span className="flex items-center justify-center" style={{ width: 64, height: 64 }}>
         <span
           className="flex items-center justify-center rounded-full transition-shadow"
           style={{
