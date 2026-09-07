@@ -24,7 +24,7 @@ export function PlayButton({ active, onToggle }: PlayButtonProps) {
       onClick={handleClick}
       aria-label={active ? 'Выключить' : 'Включить'}
       aria-pressed={active}
-      className="divider-r flex w-24 shrink-0 items-center justify-center"
+      className="divider-r flex w-[88px] shrink-0 items-center justify-center"
     >
       {/* Плашка 64×64 — только посадочное место для круглой кнопки, своей
           заливки у неё быть не должно. Цвет у неё был тот же, что у корпуса,

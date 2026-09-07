@@ -46,7 +46,10 @@ function App() {
 
   return (
     <DeviceShell>
-      <div className="divider-b flex h-24">
+      {/* 88px, не стандартные 96 (h-24): ячейка кнопки play — квадрат по
+          высоте этого ряда, а зазор от круглой кнопки (40×40) до края
+          устройства при 96px давал 28px — здесь ровно 24. */}
+      <div className="divider-b flex h-[88px]">
         <PlayButton active={isActive} onToggle={handleTogglePlay} />
         <Display
           stationName={station.name}

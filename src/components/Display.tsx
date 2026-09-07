@@ -21,7 +21,7 @@ export function Display({ stationName, status, analyser, isPlaying }: DisplayPro
 
   return (
     <div className="flex flex-1 flex-col justify-center gap-2 p-5">
-      <TextScramble text={label} className="truncate text-ink" />
+      <TextScramble text={label} className="truncate text-ink leading-5" />
       <Equalizer analyser={analyser} isPlaying={isPlaying} />
     </div>
   )
