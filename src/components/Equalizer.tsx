@@ -102,6 +102,11 @@ export function Equalizer({ analyser, isPlaying }: EqualizerProps) {
     let silentFrames = 0
     let usingFallback = false
 
+    // Ловушка при отладке: в скрытой или фоновой вкладке браузер вообще не
+    // вызывает requestAnimationFrame, поэтому эквалайзер замирает на последнем
+    // кадре при исправно играющем звуке. Так же ведёт себя и пружина диска.
+    // Это не сломанный анализатор и не мёртвый контекст — прежде чем чинить,
+    // проверь document.hidden: при true цикл просто не крутится.
     const draw = () => {
       frameId = requestAnimationFrame(draw)
       analyser.getByteFrequencyData(data)

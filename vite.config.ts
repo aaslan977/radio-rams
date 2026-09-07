@@ -19,6 +19,11 @@ export default defineConfig({
       // Регистрацию делаем вручную в main.tsx через virtual:pwa-register,
       // где reload на обновление настроен явно.
       injectRegister: false,
+      // og-image.png сюда намеренно не добавлен и в precache не попадает:
+      // его забирают только краулеры соцсетей обычным запросом по абсолютному
+      // URL, а живому пользователю он не показывается ни разу. Класть 34 КБ в
+      // офлайн-кэш ради этого незачем — отсутствие файла в списке precache не
+      // недосмотр.
       includeAssets: ['favicon.png', 'icons/apple-touch-icon-180x180.png'],
       manifest: {
         name: 'radio rams',
