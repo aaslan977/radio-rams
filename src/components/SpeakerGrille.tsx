@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, useState } from 'react'
-import { DOT_SIZE, centerDotCenters, computeRowStep, computeStep } from '../lib/grille'
+import { DOT_SIZE, centerDotCenters, computeStep } from '../lib/grille'
 
 interface Size {
   width: number
@@ -23,7 +23,7 @@ export function SpeakerGrille() {
   }, [])
 
   const stepX = computeStep(size.width)
-  const rowStep = computeRowStep(size.width, size.height)
+  const stepY = computeStep(size.height)
   const centerDots = centerDotCenters(size.width, size.height)
 
   return (
@@ -32,14 +32,8 @@ export function SpeakerGrille() {
         <defs>
           {/* Вся решётка — по-прежнему один паттерн: сотни отдельных элементов
               на всю панель когда-то давали мерцание и нечёткость. Тёмными
-              рисуются только точки центрального пятна, их полторы сотни.
-
-              Гексагональная упаковка (как на иконке приложения), а не
-              квадратная миллиметровка: тайл вдвое выше шага между рядами и
-              содержит два кружка — чётный ряд по своему центру, нечётный тем
-              же способом, но сдвинутый на полшага вправо. Оба кружка целиком
-              внутри тайла — обрезки на стыке соседних тайлов не нужны. */}
-          <pattern id="grille-dots" patternUnits="userSpaceOnUse" width={stepX} height={rowStep * 2}>
+              рисуются только точки центрального пятна, их полторы сотни. */}
+          <pattern id="grille-dots" patternUnits="userSpaceOnUse" width={stepX} height={stepY}>
             {/* opacity поверх --color-ink-soft, а не отдельный ещё более
                 светлый токен: decorative-точки решётки должны быть тусклее
                 текста/декора, использующего тот же ink-soft в остальном UI,
@@ -47,13 +41,6 @@ export function SpeakerGrille() {
             <circle
               cx={DOT_SIZE / 2}
               cy={DOT_SIZE / 2}
-              r={DOT_SIZE / 2}
-              className="fill-ink-soft"
-              opacity={0.35}
-            />
-            <circle
-              cx={DOT_SIZE / 2 + stepX / 2}
-              cy={rowStep + DOT_SIZE / 2}
               r={DOT_SIZE / 2}
               className="fill-ink-soft"
               opacity={0.35}

@@ -1,16 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import {
-  CENTER_RATIO,
-  DOT_SIZE,
-  GAP,
-  centerDotCenters,
-  computeRowStep,
-  computeStep,
-  countDots,
-  countRows,
-} from './grille'
+import { CENTER_RATIO, DOT_SIZE, GAP, centerDotCenters, computeStep, countDots } from './grille'
 
-describe('computeStep: горизонтальный шаг решётки динамика', () => {
+describe('computeStep: шаг сетки решётки динамика', () => {
   const sizes = [64, 100, 173, 240, 331, 360, 512, 1024]
 
   it.each(sizes)('при размере %i точки упираются в оба края, ни одна не обрезана', (size) => {
@@ -55,58 +46,10 @@ describe('computeStep: горизонтальный шаг решётки дин
     expect(computeStep(0)).toBe(DOT_SIZE + GAP)
   })
 
-  it('десктопная ширина 312px даёт 18 точек в ряду', () => {
-    expect(countDots(312)).toBe(18)
-  })
-})
-
-describe('countRows/computeRowStep: гексагональная упаковка по вертикали', () => {
-  const pairs: Array<[number, number]> = [
-    [64, 64],
-    [100, 173],
-    [173, 100],
-    [240, 512],
-    [312, 331],
-    [360, 717],
-    [1024, 768],
-  ]
-
-  it.each(pairs)('при ширине %i и высоте %i число рядов нечётное', (width, height) => {
-    expect(countRows(width, height) % 2).toBe(1)
-  })
-
-  it.each(pairs)('при ширине %i и высоте %i ряды упираются в оба края', (width, height) => {
-    const rowStep = computeRowStep(width, height)
-    const rows = countRows(width, height)
-    const lastEdge = rowStep * (rows - 1) + DOT_SIZE
-
-    expect(lastEdge).toBeCloseTo(height, 6)
-  })
-
-  it('десктопные 312×331 дают 21 ряд', () => {
-    // Значение зафиксировано в вёрстке: idealRowStep = stepX·√3/2 ≈ 15.49,
-    // растянутый под точную высоту шаг — чуть больше, ~16.15.
-    expect(countRows(312, 331)).toBe(21)
-  })
-
-  it('на вырожденных размерах не делит на ноль и не даёт NaN', () => {
-    for (const height of [0, -10, 1, DOT_SIZE]) {
-      const rows = countRows(312, height)
-      const step = computeRowStep(312, height)
-      expect(Number.isFinite(rows)).toBe(true)
-      expect(Number.isFinite(step)).toBe(true)
-      expect(rows).toBeGreaterThan(0)
-      expect(step).toBeGreaterThan(0)
-    }
-  })
-
-  it('число рядов не убывает с ростом высоты', () => {
-    let prev = 0
-    for (const height of [64, 100, 173, 240, 331, 512, 768, 1024]) {
-      const rows = countRows(312, height)
-      expect(rows).toBeGreaterThanOrEqual(prev)
-      prev = rows
-    }
+  it('десктопная высота 331px даёт ровный шаг 17px', () => {
+    // Значение зафиксировано в вёрстке: 20 рядов с шагом ровно DOT_SIZE + GAP.
+    expect(computeStep(331)).toBeCloseTo(DOT_SIZE + GAP, 6)
+    expect(countDots(331)).toBe(20)
   })
 })
 
@@ -132,18 +75,14 @@ describe('centerDotCenters', () => {
     const width = 312
     const height = 331
     const stepX = computeStep(width)
-    const rowStep = computeRowStep(width, height)
+    const stepY = computeStep(height)
 
     for (const [x, y] of centerDotCenters(width, height)) {
-      const iy = (y - DOT_SIZE / 2) / rowStep
-      expect(Math.abs(iy - Math.round(iy))).toBeLessThan(1e-9)
-
-      // Чётный ряд стоит на целочисленной сетке stepX, нечётный сдвинут на
-      // полшага — та же геометрия, что у пары кружков в SVG-паттерне.
-      const row = Math.round(iy)
-      const odd = row % 2 === 1
-      const ix = (x - DOT_SIZE / 2 - (odd ? stepX / 2 : 0)) / stepX
+      // Смещение на половину диаметра — то же, что у circle внутри pattern.
+      const ix = (x - DOT_SIZE / 2) / stepX
+      const iy = (y - DOT_SIZE / 2) / stepY
       expect(Math.abs(ix - Math.round(ix))).toBeLessThan(1e-9)
+      expect(Math.abs(iy - Math.round(iy))).toBeLessThan(1e-9)
     }
   })
 
@@ -154,8 +93,7 @@ describe('centerDotCenters', () => {
     const key = (x: number, y: number) => `${x.toFixed(4)}:${y.toFixed(4)}`
     const set = new Set(dots.map(([x, y]) => key(x, y)))
 
-    // Каждой точке пятна отвечает зеркальная относительно обеих осей —
-    // держится на нечётном числе рядов, которое гарантирует countRows.
+    // Каждой точке пятна отвечает зеркальная относительно обеих осей.
     for (const [x, y] of dots) {
       expect(set.has(key(width - x, y))).toBe(true)
       expect(set.has(key(x, height - y))).toBe(true)
@@ -164,7 +102,7 @@ describe('centerDotCenters', () => {
 
   it('пятно заметно меньше всей решётки, но не пустое', () => {
     const dots = centerDotCenters(312, 331)
-    const total = countDots(312) * countRows(312, 331)
+    const total = countDots(312) * countDots(331)
 
     expect(dots.length).toBeGreaterThan(50)
     expect(dots.length).toBeLessThan(total * 0.6)
