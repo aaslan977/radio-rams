@@ -25,6 +25,9 @@ export const stations: Station[] = [
     id: 'radio-swiss-classic',
     name: 'Radio Swiss Classic',
     genre: 'Классика',
+    // Именно этот путь, а не короткий `/m/rsc_de/mp3_128` из старой
+    // документации SRG SSR: тот редиректит на `http://`, и на HTTPS-деплое
+    // станция молча блокируется как mixed content. По curl оба выглядят живыми.
     streamUrl: 'https://stream.srg-ssr.ch/srgssr/rsc_de/mp3/128',
   },
   {
