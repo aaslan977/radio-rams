@@ -74,7 +74,7 @@ export function useMediaSession({ station, status, onPlay, onPause, onStep }: Me
     navigator.mediaSession.metadata = new MediaMetadata({
       title: station.name,
       artist: station.genre,
-      album: 'Radio',
+      album: 'radio rams',
       artwork: ARTWORK,
     })
   }, [station.name, station.genre])
