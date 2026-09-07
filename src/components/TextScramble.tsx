@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useReducedMotion } from 'framer-motion'
 
 const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
 
@@ -23,8 +24,15 @@ const DURATION_MS = 400
 // самой отрисованной строки.
 export function TextScramble({ text, className }: TextScrambleProps) {
   const [display, setDisplay] = useState(text)
+  const shouldReduceMotion = useReducedMotion()
 
   useEffect(() => {
+    // Та же системная настройка, что уже уважает звук (UI_SOUND в
+    // lib/sound.ts) — дошифровка чисто декоративна. При «уменьшении движения»
+    // эффекту скрэмблить нечего: рендер ниже берёт text напрямую, в обход
+    // display.
+    if (shouldReduceMotion) return
+
     let frameId = 0
     const start = performance.now()
 
@@ -43,7 +51,7 @@ export function TextScramble({ text, className }: TextScrambleProps) {
 
     frameId = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(frameId)
-  }, [text])
+  }, [text, shouldReduceMotion])
 
-  return <span className={className}>{display}</span>
+  return <span className={className}>{shouldReduceMotion ? text : display}</span>
 }

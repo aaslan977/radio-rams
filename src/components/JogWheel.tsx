@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, type KeyboardEvent } from 'react'
 import { useDrag } from '@use-gesture/react'
-import { animate, useMotionValue, useMotionValueEvent } from 'framer-motion'
+import { animate, useMotionValue, useMotionValueEvent, useReducedMotion } from 'framer-motion'
 import { useTiks } from '@rexa-developer/tiks/react'
 import { UI_SOUND } from '../lib/sound'
 import { stations } from '../lib/stations'
@@ -43,6 +43,7 @@ function normalizeAngleDelta(delta: number): number {
 
 export function JogWheel({ activeIndex, onStep }: JogWheelProps) {
   const tiks = useTiks(UI_SOUND)
+  const shouldReduceMotion = useReducedMotion()
   const containerRef = useRef<HTMLDivElement>(null)
   // Угол диска — производная от выбранной станции, а не свободная величина:
   // 45° на станцию, поэтому кружок-индикатор всегда стоит на своём делении и
@@ -73,6 +74,13 @@ export function JogWheel({ activeIndex, onStep }: JogWheelProps) {
     if (el) el.style.transform = `rotate(${latest}deg)`
   })
 
+  // При «уменьшении движения» в системе диск встаёт на деление сразу — та же
+  // настройка, которую уже уважает звук (см. UI_SOUND в lib/sound.ts).
+  const settle = (target: number) => {
+    if (shouldReduceMotion) rotation.set(target)
+    else animate(rotation, target, DETENT_SPRING)
+  }
+
   // Собственный шаг диска: сдвигаем цель и сразу помечаем станцию отработанной,
   // иначе эффект ниже принял бы её за внешнюю смену и добавил поворот второй раз.
   const stepBy = (delta: number) => {
@@ -88,7 +96,8 @@ export function JogWheel({ activeIndex, onStep }: JogWheelProps) {
     const delta = shortestStepDelta(settledIndexRef.current, activeIndex, stations.length)
     settledIndexRef.current = activeIndex
     rotationTargetRef.current += delta * STEP_DEG
-    animate(rotation, rotationTargetRef.current, DETENT_SPRING)
+    settle(rotationTargetRef.current)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeIndex, rotation])
 
   const pointerAngle = (x: number, y: number): number => {
@@ -115,7 +124,7 @@ export function JogWheel({ activeIndex, onStep }: JogWheelProps) {
       // Палец отпущен — кольцо доводится пружиной до ближайшего деления.
       // Недокрут меньше 45°, поэтому доводка всегда короткая.
       accumulatedRef.current = 0
-      animate(rotation, rotationTargetRef.current, DETENT_SPRING)
+      settle(rotationTargetRef.current)
       return
     }
 
@@ -150,7 +159,7 @@ export function JogWheel({ activeIndex, onStep }: JogWheelProps) {
     stepBy(delta)
     tiks.click()
     vibrate(8)
-    animate(rotation, rotationTargetRef.current, DETENT_SPRING)
+    settle(rotationTargetRef.current)
   }
 
   return (

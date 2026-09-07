@@ -1,7 +1,18 @@
 import { render, screen, fireEvent } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from 'vitest'
 import { JogWheel } from './JogWheel'
 import { stations } from '../lib/stations'
+
+// framer-motion инициализирует prefersReducedMotion лениво и один раз на
+// процесс (слушает 'change' на уже захваченном matchMedia), поэтому подменить
+// window.matchMedia в отдельном тесте бесполезно — переопределяем сам
+// useReducedMotion модуля. Префикс mock обязателен: vi.mock поднимается
+// над импортами, и только так модуль виден внутри фабрики.
+const mockUseReducedMotion = vi.fn(() => false)
+vi.mock('framer-motion', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('framer-motion')>()
+  return { ...actual, useReducedMotion: () => mockUseReducedMotion() }
+})
 
 describe('JogWheel: управление с клавиатуры', () => {
   let onStep: Mock<(delta: number) => void>
@@ -145,5 +156,41 @@ describe('JogWheel: угол диска привязан к станции', () 
     rerender(<JogWheel activeIndex={4} onStep={() => {}} />)
 
     expect(await settle(el, 45)).toBeCloseTo(4 * 45, 1)
+  })
+})
+
+describe('JogWheel: уважает prefers-reduced-motion', () => {
+  function angleOf(el: HTMLElement): number {
+    const match = (el.style.transform || '').match(/rotate\(([-0-9.]+)deg\)/)
+    return match ? parseFloat(match[1]) : 0
+  }
+
+  beforeEach(() => {
+    mockUseReducedMotion.mockReturnValue(true)
+  })
+
+  afterEach(() => {
+    mockUseReducedMotion.mockReturnValue(false)
+  })
+
+  it('шаг клавиатурой встаёт на деление сразу, без переброса за упор', async () => {
+    render(<JogWheel activeIndex={0} onStep={() => {}} />)
+    const el = screen.getByRole('slider')
+
+    fireEvent.keyDown(el, { key: 'ArrowRight' })
+    // Даём шанс кадру анимации отрисоваться, если бы она всё-таки запустилась.
+    await new Promise((resolve) => setTimeout(resolve, 32))
+
+    expect(angleOf(el)).toBe(45)
+  })
+
+  it('внешняя смена станции доворачивает диск мгновенно', async () => {
+    const { rerender } = render(<JogWheel activeIndex={0} onStep={() => {}} />)
+    const el = screen.getByRole('slider')
+
+    rerender(<JogWheel activeIndex={3} onStep={() => {}} />)
+    await new Promise((resolve) => setTimeout(resolve, 32))
+
+    expect(angleOf(el)).toBe(3 * 45)
   })
 })
