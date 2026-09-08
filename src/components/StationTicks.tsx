@@ -15,8 +15,13 @@ interface StationTicksProps {
 const TICK_CLASS =
   "relative h-1 w-1 rounded-full bg-ink transition-opacity after:absolute after:-inset-3 after:content-['']"
 
-const INDICATOR_WIDTH = 14
+const INDICATOR_WIDTH = 24
 const INDICATOR_HEIGHT = 2
+// Толщина .divider-b (styles/index.css) — border-bottom SpeakerGrille выше
+// целиком лежит НАД верхней границей этого ряда (внутри коробки решётки),
+// а не на ней: центр линии на DIVIDER_WIDTH/2 выше y=0. Значение продублировано
+// вручную — читать его из CSS в рантайме здесь не из чего.
+const DIVIDER_WIDTH = 2
 const INDICATOR_TWEEN = { type: 'tween', duration: 0.25, ease: 'easeOut' } as const
 
 export function StationTicks({ activeIndex, onSelect }: StationTicksProps) {
@@ -86,7 +91,7 @@ export function StationTicks({ activeIndex, onSelect }: StationTicksProps) {
   }, [])
 
   return (
-    <div ref={containerRef} className="relative flex items-center justify-between px-6 pt-3 pb-3.5">
+    <div ref={containerRef} className="relative flex items-center justify-between px-5 pt-3 pb-3.5">
       {/* Скользит к активной засечке по линии разделителя над рядом — дополняет
           opacity точек, не заменяет её. aria-hidden: состояние уже объявлено
           через aria-current на кнопках ниже. */}
@@ -97,9 +102,15 @@ export function StationTicks({ activeIndex, onSelect }: StationTicksProps) {
         style={{
           width: INDICATOR_WIDTH,
           height: INDICATOR_HEIGHT,
-          top: -INDICATOR_HEIGHT / 2,
+          top: -(DIVIDER_WIDTH + INDICATOR_HEIGHT) / 2,
           left: 0,
           background: 'var(--color-accent)',
+          // color-mix, а не rgba с продублированным hex: свечение остаётся
+          // производной от единственного токена акцента, не второй записью
+          // того же цвета. Смещение вниз (не во все стороны) и альфа приглушена
+          // до 40% — как будто индикатор подсвечивает линию под собой, а не
+          // светится сам по себе равномерно.
+          boxShadow: '0 3px 5px -1px color-mix(in srgb, var(--color-accent) 40%, transparent)',
         }}
       />
       {stations.map((station, i) => (
