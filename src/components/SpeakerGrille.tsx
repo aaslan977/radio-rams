@@ -27,7 +27,7 @@ export function SpeakerGrille() {
   const centerDots = centerDotCenters(size.width, size.height)
 
   return (
-    <div className="divider-b min-h-0 flex-1 px-6 py-6 sm:flex-none">
+    <div className="divider-b min-h-0 flex-1 p-5 sm:flex-none">
       <svg ref={svgRef} className="block h-full w-full sm:h-[331px]" aria-hidden="true">
         <defs>
           {/* Вся решётка — по-прежнему один паттерн: сотни отдельных элементов
