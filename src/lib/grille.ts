@@ -50,5 +50,14 @@ export function centerDotCenters(width: number, height: number): Array<[number, 
       if (Math.hypot(x - cx, y - cy) <= radius) dots.push([x, y])
     }
   }
-  return dots
+  if (dots.length === 0) return dots
+
+  // Самый верхний и самый нижний ряд пятна — на ступенчатом круге это
+  // одиночный узкий выступ (полюс), а не дуга: читается как острый носик,
+  // а не как край окружности. Убираем оба ряда целиком, а не сужаем их —
+  // так граница пятна везде остаётся дугой из целых точек.
+  const ys = dots.map(([, y]) => y)
+  const minY = Math.min(...ys)
+  const maxY = Math.max(...ys)
+  return dots.filter(([, y]) => y !== minY && y !== maxY)
 }
